@@ -106,6 +106,8 @@
 			{/each}
 		</ul>
 	{/if}
+
+	<p class="version">v{__APP_VERSION__}</p>
 </div>
 
 {#if showCreate}
@@ -200,5 +202,12 @@
 	}
 	.muted {
 		color: var(--text-muted);
+	}
+	.version {
+		margin: 1.5rem 0 0;
+		text-align: right;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+		opacity: 0.7;
 	}
 </style>

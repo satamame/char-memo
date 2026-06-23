@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { defineConfig } from 'vite';
@@ -7,7 +8,13 @@ import { defineConfig } from 'vite';
 const base = (process.env.BASE_PATH ?? '/apps/char-memo').replace(/\/+$/, '');
 const scope = `${base}/`;
 
+// package.json の version をビルド時にアプリへ埋め込む（画面表示用）
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
+
 export default defineConfig({
+	define: {
+		__APP_VERSION__: JSON.stringify(pkg.version)
+	},
 	plugins: [
 		sveltekit(),
 		SvelteKitPWA({

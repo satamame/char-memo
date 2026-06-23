@@ -15,6 +15,11 @@ GitHub に push 後、議論・PR連携・共有が要る項目は Issues に昇
 
 ## Someday / Ideas（やるかも）
 
+- [ ] **オフライン初回ロード対応（Service Worker）**：現状、アプリの土台HTMLが precache されず、navigateFallback も base 非対応（`/`）のため、オフラインでは初回ロードできない。オンライン時は常にネットから最新を取得するので実害は小さい（「更新」を押す前から最新版が見える程度）。
+  - 調査メモ：
+    - ルート(`/`)を prerender すると土台HTMLは precache されるが、URLが `/`（オリジン直下）で base 配下（`/apps/char-memo/`）を指さない。
+    - workbox の `manifestTransforms` を自前で与えると、@vite-pwa/sveltekit がURLを配信構造へ変換する内部処理を上書きしてしまい、precache URL が `client/...` や `prerendered/pages/...` のまま壊れる。
+    - 正しく直すには「プラグインの変換を潰さず、土台HTMLのURLだけ base 配下へ」「navigateFallback を base 配下へ」する必要がある。**ローカルでビルド→`build/sw.js` 検査の反復**が前提。
 - [ ] **ネタバレ②**：人物/自由メモに「ネタバレ印」→ 詳細画面でぼかし＋タップ表示（エクスポートは含む/除外を選択）
 - [ ] **ネタバレ③**：読書位置のしきい値（「◯章から」）で、その先を自動的に隠す
 - [ ] **Android Web Share Target**：共有メニューから json/URL を取り込み（iOS非対応）
