@@ -133,3 +133,9 @@ textarea {
 	padding: 1rem;
 	padding-bottom: calc(1rem + env(safe-area-inset-bottom));
 }
+
+/* 並べ替えのドラッグ中は、掴んだ場所に関係なくカーソルを「掴んでいる手」に固定する */
+body.dnd-dragging,
+body.dnd-dragging * {
+	cursor: grabbing !important;
+}

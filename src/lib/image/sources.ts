@@ -14,17 +14,28 @@ export async function fromFile(file: File): Promise<Blob> {
 	return normalizeImage(file);
 }
 
-/** クリップボードの貼り付けイベントから画像を取り出して正規化する。画像が無ければ null */
-export async function fromPasteEvent(event: ClipboardEvent): Promise<Blob | null> {
-	const items = event.clipboardData?.items;
-	if (!items) return null;
+/**
+ * クリップボードを直接読み取り、画像があれば正規化して返す（Clipboard API）。
+ * ボタン押下などのユーザー操作から呼ぶこと（読み取り許可・ジェスチャが必要）。
+ * テキスト欄への貼り付けを介さないので、モバイルでも自然に動く。
+ */
+export async function fromClipboard(): Promise<Blob> {
+	if (!navigator.clipboard || !('read' in navigator.clipboard)) {
+		throw new Error('この端末／ブラウザはクリップボードからの貼り付けに未対応です。');
+	}
+	let items: ClipboardItems;
+	try {
+		items = await navigator.clipboard.read();
+	} catch {
+		throw new Error('クリップボードを読み取れませんでした（許可が必要な場合があります）。');
+	}
 	for (const item of items) {
-		if (item.type.startsWith('image/')) {
-			const file = item.getAsFile();
-			if (file) return normalizeImage(file);
+		const type = item.types.find((t) => t.startsWith('image/'));
+		if (type) {
+			return normalizeImage(await item.getType(type));
 		}
 	}
-	return null;
+	throw new Error('クリップボードに画像がありません。');
 }
 
 /**

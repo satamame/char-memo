@@ -6,14 +6,16 @@
 		book: Book;
 		onexport: (book: Book) => void;
 		ondelete: (book: Book) => void;
+		/** 並べ替え中などにアクションボタンを薄く表示する */
+		dimActions?: boolean;
 	}
-	let { book, onexport, ondelete }: Props = $props();
+	let { book, onexport, ondelete, dimActions = false }: Props = $props();
 </script>
 
 <div class="card">
 	<span class="book-icon" aria-hidden="true">📔</span>
 	<a class="title" href="{base}/book/{book.id}">{book.title || '(無題の作品)'}</a>
-	<div class="tools">
+	<div class="tools" class:dim={dimActions}>
 		<button type="button" class="icon-btn ghost" title="エクスポート" onclick={() => onexport(book)}>
 			⬇
 		</button>
@@ -64,6 +66,13 @@
 		z-index: 1;
 		display: flex;
 		gap: 0.25rem;
+	}
+	/* 並べ替え中の減光＆無効化。BookCard 自身のクラスで行うことで、
+	   ドラッグ中に body へ複製される要素にも適用される（祖先依存だと効かない）。
+	   pointer-events: none で、複製側でもホバー強調やポインタカーソルが出ないようにする。 */
+	.tools.dim {
+		opacity: 0.3;
+		pointer-events: none;
 	}
 	/* カード内は枠なしのゴースト表示。高さは抑えつつ、タップ幅は確保する。 */
 	.icon-btn.ghost {

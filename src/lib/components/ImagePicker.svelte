@@ -2,7 +2,7 @@
 	// 顔アイコンの入力UI。4方式（ファイル選択 / 貼り付け / カメラ撮影 / AI生成）を集約。
 	// どの方式でも正規化済み Blob を onchange で親に渡す。
 	import Avatar from './Avatar.svelte';
-	import { fromFile, fromPasteEvent, fromAIGeneration } from '$lib/image/sources';
+	import { fromFile, fromClipboard, fromAIGeneration } from '$lib/image/sources';
 
 	interface Props {
 		image: Blob | null;
@@ -25,23 +25,9 @@
 		await run(() => fromFile(file));
 	}
 
-	// ペーストはウィンドウ全体で受ける（div はフォーカスを持てず paste を取りこぼすため）。
-	// クリップボードに画像がある時だけ処理し、既存画像があっても上書きする。
-	$effect(() => {
-		const onPaste = (event: ClipboardEvent) => {
-			void handlePaste(event);
-		};
-		window.addEventListener('paste', onPaste);
-		return () => window.removeEventListener('paste', onPaste);
-	});
-
-	async function handlePaste(event: ClipboardEvent) {
-		// fromPasteEvent はクリップボード項目を同期的に読むので、この時点で画像を取り出す
-		const blob = await fromPasteEvent(event);
-		if (blob) {
-			event.preventDefault();
-			await run(async () => blob);
-		}
+	// クリップボードを直接読んで画像をセット（テキスト欄への貼り付けを介さない）
+	async function handlePaste() {
+		await run(() => fromClipboard());
 	}
 
 	async function handleAI() {
@@ -69,6 +55,7 @@
 		<button type="button" class="btn" onclick={() => fileInput.click()} disabled={busy}>
 			ファイル選択
 		</button>
+		<button type="button" class="btn" onclick={handlePaste} disabled={busy}> 貼り付け </button>
 		<button type="button" class="btn" onclick={() => cameraInput.click()} disabled={busy}>
 			カメラ撮影
 		</button>
@@ -80,7 +67,7 @@
 		{/if}
 	</div>
 
-	<p class="hint">画像をコピーして貼り付け（Ctrl/⌘+V）でもセットできます（上書き可）。</p>
+	<p class="hint">「貼り付け」でクリップボードの画像をセットできます（既存画像は上書き）。</p>
 	{#if error}<p class="error">{error}</p>{/if}
 
 	<input
