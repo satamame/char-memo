@@ -23,12 +23,6 @@ GitHub に push 後、議論・PR連携・共有が要る項目は Issues に昇
 - [ ] **iOSのストレージ分離調査**：Safariタブ取込 vs インストール済みPWA のデータ分離挙動の確認・対策
 - [ ] **PWA更新の定期チェック**：現状は起動/遷移時のみ（必要なら `registration.update()` を定期実行）
 
-## 保留メモ
-
-- **古い iOS で顔アイコンが一覧表示されない問題**：iOS 26.4 以前で、IndexedDB から `getAll` した Blob のデータが `<img>` で読めず、人物一覧の顔アイコンが表示されないことがある（iOS 26.5 で解消を確認）。
-  - 対策版（画像を Blob ではなく data URL 文字列で保存）を **`feature/image-dataurl` ブランチ**に保存済み。
-  - 古い iOS のサポートが必要になったら、このブランチを main に取り込む。
-
 ## Done（最近）
 
 - [x] プロジェクト雛形（SvelteKit + adapter-static + TypeScript + PWA）
