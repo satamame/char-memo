@@ -3,18 +3,18 @@
 	import { goto } from '$app/navigation';
 	import { dndzone, type DndEvent } from 'svelte-dnd-action';
 	import { listBooks, createBook, deleteBook, reorderBooks } from '$lib/db/books';
-	import { exportBookToFile } from '$lib/io/export';
 	import type { Book } from '$lib/db/schema';
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import BookCard from '$lib/components/BookCard.svelte';
 	import BookTitleDialog from '$lib/components/BookTitleDialog.svelte';
 	import ImportDialog from '$lib/components/ImportDialog.svelte';
+	import ExportDialog from '$lib/components/ExportDialog.svelte';
 
 	let books = $state<Book[]>([]);
 	let loading = $state(true);
 	let showCreate = $state(false);
 	let showImport = $state(false);
-	let error = $state<string | null>(null);
+	let exportTarget = $state<Book | null>(null);
 
 	async function refresh() {
 		books = await listBooks();
@@ -25,12 +25,8 @@
 		refresh();
 	});
 
-	async function handleExport(book: Book) {
-		try {
-			await exportBookToFile(book.id);
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'エクスポートに失敗しました';
-		}
+	function handleExport(book: Book) {
+		exportTarget = book;
 	}
 
 	async function handleDelete(book: Book) {
@@ -63,8 +59,6 @@
 </AppHeader>
 
 <div class="page">
-	{#if error}<p class="error">{error}</p>{/if}
-
 	{#if loading}
 		<p class="muted">読み込み中…</p>
 	{:else if books.length === 0}
@@ -109,6 +103,14 @@
 	/>
 {/if}
 
+{#if exportTarget}
+	<ExportDialog
+		bookId={exportTarget.id}
+		bookTitle={exportTarget.title}
+		onclose={() => (exportTarget = null)}
+	/>
+{/if}
+
 <style>
 	.app-logo {
 		flex: 0 0 auto;
@@ -127,8 +129,5 @@
 	}
 	.muted {
 		color: var(--text-muted);
-	}
-	.error {
-		color: var(--danger);
 	}
 </style>

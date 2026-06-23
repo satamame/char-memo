@@ -5,11 +5,11 @@
 	import { dndzone, type DndEvent } from 'svelte-dnd-action';
 	import { getBook, updateBook } from '$lib/db/books';
 	import { listChars, createChar, reorderChars } from '$lib/db/chars';
-	import { exportBookToFile } from '$lib/io/export';
 	import type { Book, Char } from '$lib/db/schema';
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import CharListItem from '$lib/components/CharListItem.svelte';
 	import BookTitleDialog from '$lib/components/BookTitleDialog.svelte';
+	import ExportDialog from '$lib/components/ExportDialog.svelte';
 
 	const bookId = $derived(page.params.bookId!);
 
@@ -17,7 +17,7 @@
 	let chars = $state<Char[]>([]);
 	let loading = $state(true);
 	let showRename = $state(false);
-	let error = $state<string | null>(null);
+	let showExport = $state(false);
 
 	$effect(() => {
 		const id = bookId;
@@ -46,12 +46,8 @@
 		);
 	}
 
-	async function handleExport() {
-		try {
-			await exportBookToFile(bookId);
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'エクスポートに失敗しました';
-		}
+	function handleExport() {
+		showExport = true;
 	}
 </script>
 
@@ -80,8 +76,6 @@
 </AppHeader>
 
 <div class="page">
-	{#if error}<p class="error">{error}</p>{/if}
-
 	{#if loading}
 		<p class="muted">読み込み中…</p>
 	{:else if !book}
@@ -117,6 +111,10 @@
 	/>
 {/if}
 
+{#if showExport && book}
+	<ExportDialog bookId={book.id} bookTitle={book.title} onclose={() => (showExport = false)} />
+{/if}
+
 <style>
 	.list {
 		list-style: none;
@@ -131,8 +129,5 @@
 	}
 	.muted {
 		color: var(--text-muted);
-	}
-	.error {
-		color: var(--danger);
 	}
 </style>
