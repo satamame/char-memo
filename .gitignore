@@ -1,0 +1,17 @@
+node_modules
+
+# build / generated
+/build
+/.svelte-kit
+/package
+dev-dist
+
+# env
+.env
+.env.*
+!.env.example
+
+# os / editor
+.DS_Store
+Thumbs.db
+*.local
