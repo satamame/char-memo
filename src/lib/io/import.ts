@@ -102,6 +102,37 @@ export async function commitImport(data: ExportFile, options: CommitOptions): Pr
 	return book.id;
 }
 
+/**
+ * URL から JSON テキストを取得する。
+ * 別ドメインの場合は配信元が CORS（Access-Control-Allow-Origin）を返す必要がある。
+ * 例: raw.githubusercontent.com / jsDelivr は対応済み。XServer 等は .htaccess で付与。
+ */
+export async function fetchImportText(url: string): Promise<string> {
+	let parsed: URL;
+	try {
+		parsed = new URL(url.trim());
+	} catch {
+		throw new Error('URL の形式が正しくありません。');
+	}
+	if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+		throw new Error('http(s) の URL を指定してください。');
+	}
+
+	let res: Response;
+	try {
+		res = await fetch(parsed.toString(), { redirect: 'follow' });
+	} catch {
+		// CORS 不許可・ネットワーク不通・混在コンテンツ等はここに来る（詳細は取得不可）
+		throw new Error(
+			'URL を取得できませんでした。配信元が CORS 未対応か、ネットワークエラーの可能性があります。'
+		);
+	}
+	if (!res.ok) {
+		throw new Error(`URL の取得に失敗しました（HTTP ${res.status}）。`);
+	}
+	return res.text();
+}
+
 /** File オブジェクトをテキストとして読む補助 */
 export function readFileAsText(file: File): Promise<string> {
 	return new Promise((resolve, reject) => {

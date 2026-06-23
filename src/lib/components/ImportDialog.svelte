@@ -2,7 +2,7 @@
 	// 作品インポート用ダイアログ。
 	// ファイル選択 → 検証 → 取り込み前に作品名を確認/編集（デフォルト＝JSON内の title）。
 	// 確定時に重複を判定し、同名があれば「上書き」、なければ新規取り込み（ボタンが自動で切り替わる）。
-	import { parseImport, commitImport, readFileAsText } from '$lib/io/import';
+	import { parseImport, commitImport, readFileAsText, fetchImportText } from '$lib/io/import';
 	import { findBookByTitle } from '$lib/db/books';
 	import type { Book, ExportFile } from '$lib/db/schema';
 
@@ -19,6 +19,9 @@
 	let error = $state<string | null>(null);
 	let fileInput: HTMLInputElement;
 	let titleInput = $state<HTMLInputElement | null>(null);
+
+	let url = $state(''); // URL からの取り込み用
+	let urlBusy = $state(false);
 
 	// 確認画面に入ったら作品名入力にフォーカス
 	$effect(() => {
@@ -39,18 +42,39 @@
 		};
 	});
 
+	// 取得したテキストを検証して確認フェーズへ進める（ファイル/URL 共通）
+	function applyText(text: string) {
+		data = parseImport(text);
+		title = data.book.title; // デフォルトは JSON 内の title
+		phase = 'confirm';
+	}
+
 	async function handleFile() {
 		const file = fileInput.files?.[0];
 		fileInput.value = '';
 		if (!file) return;
 		error = null;
 		try {
-			const text = await readFileAsText(file);
-			data = parseImport(text);
-			title = data.book.title; // デフォルトは JSON 内の title
-			phase = 'confirm';
+			applyText(await readFileAsText(file));
 		} catch (e) {
 			error = e instanceof Error ? e.message : '読み込みに失敗しました';
+		}
+	}
+
+	async function handleUrl() {
+		const u = url.trim();
+		if (!u) {
+			error = 'URL を入力してください';
+			return;
+		}
+		error = null;
+		urlBusy = true;
+		try {
+			applyText(await fetchImportText(u));
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'URL からの読み込みに失敗しました';
+		} finally {
+			urlBusy = false;
 		}
 	}
 
@@ -78,10 +102,34 @@
 	<div class="dialog" role="dialog" aria-modal="true" tabindex="-1" onclick={(e) => e.stopPropagation()}>
 		{#if phase === 'pick'}
 			<h2>作品をインポート</h2>
-			<p>char-memo で書き出した <code>.charmemo.json</code> を選んでください。</p>
+			<p class="sub">char-memo で書き出した <code>.charmemo.json</code> を取り込みます。</p>
+
+			<div class="section">
+				<div class="label">ファイルから</div>
+				<button type="button" class="btn" onclick={() => fileInput.click()} disabled={urlBusy}>
+					ファイルを選択
+				</button>
+			</div>
+
+			<div class="section">
+				<div class="label">URL から</div>
+				<form class="url-row" onsubmit={(e) => (e.preventDefault(), handleUrl())}>
+					<input
+						type="url"
+						bind:value={url}
+						placeholder="https://… の json アドレス"
+						inputmode="url"
+						disabled={urlBusy}
+						aria-label="json の URL"
+					/>
+					<button type="submit" class="btn" disabled={urlBusy}>
+						{urlBusy ? '取得中…' : '取得'}
+					</button>
+				</form>
+			</div>
+
 			<div class="row">
-				<button type="button" class="btn" onclick={() => fileInput.click()}>ファイルを選択</button>
-				<button type="button" class="btn" onclick={onclose}>閉じる</button>
+				<button type="button" class="btn" onclick={onclose} disabled={urlBusy}>閉じる</button>
 			</div>
 		{:else if phase === 'confirm' && data}
 			<h2>取り込む作品名</h2>
@@ -153,6 +201,23 @@
 		margin: 0 0 0.75rem;
 		color: var(--text-muted);
 		font-size: 0.9rem;
+	}
+	.section {
+		margin-bottom: 1rem;
+	}
+	.label {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--text-muted);
+		margin-bottom: 0.35rem;
+	}
+	.url-row {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.url-row input {
+		flex: 1;
+		min-width: 0;
 	}
 	input {
 		width: 100%;
