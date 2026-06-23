@@ -1,79 +1,86 @@
-// プレースホルダのPWAアイコン/ファビコンを生成する。
-// 依存なしで動くよう、zlib だけで単色＋文字風ではなく単色丸のPNGを書き出す。
-// （後で本番アイコンに差し替える前提）
-import { deflateSync } from 'node:zlib';
-import { writeFileSync, mkdirSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+// 元画像から PWA アイコン/ファビコンを一括生成する。
+//
+// 使い方:
+//   node scripts/make-icons.mjs [元画像のパス]
+//   - 引数を省略すると、プロジェクト直下の icon-source.(png|svg|jpg|jpeg|webp) を探す。
+//   - 見つからなければ、単色のプレースホルダ画像を使う（従来どおり）。
+//
+// 生成物（static/ 配下。ファイル名は manifest / app.html と一致）:
+//   icons/icon-192.png            … PWA標準
+//   icons/icon-512.png            … PWA標準（高解像度）
+//   icons/icon-512-maskable.png   … Android マスク用（中央80%＋背景）
+//   icons/apple-touch-icon-180.png… iOS ホーム画面用（任意）
+//   favicon.png                   … ブラウザのタブ
+import sharp from 'sharp';
+import { existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const iconsDir = join(here, '..', 'static', 'icons');
-const staticDir = join(here, '..', 'static');
+const root = join(here, '..');
+const iconsDir = join(root, 'static', 'icons');
+const staticDir = join(root, 'static');
 mkdirSync(iconsDir, { recursive: true });
 
-const crcTable = (() => {
-	const t = new Uint32Array(256);
-	for (let n = 0; n < 256; n++) {
-		let c = n;
-		for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-		t[n] = c >>> 0;
-	}
-	return t;
-})();
-function crc32(buf) {
-	let c = 0xffffffff;
-	for (let i = 0; i < buf.length; i++) c = crcTable[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
-	return (c ^ 0xffffffff) >>> 0;
-}
-function chunk(type, data) {
-	const len = Buffer.alloc(4);
-	len.writeUInt32BE(data.length, 0);
-	const typeBuf = Buffer.from(type, 'ascii');
-	const crc = Buffer.alloc(4);
-	crc.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])), 0);
-	return Buffer.concat([len, typeBuf, data, crc]);
-}
+// ---- 設定 ----
+const BG = '#ffffff'; // maskable / apple-touch の背景色（透過を埋める）
+const FG = '#1f2933'; // プレースホルダの色（テーマカラー）
+const MASKABLE_SAFE = 0.8; // maskable の絵柄スケール（残りがセーフゾーンの余白）
 
-// 背景色＋中央の円（テーマ色）のRGBA画像を生成
-function makePng(size, bg, fg) {
-	const cx = size / 2;
-	const cy = size / 2;
-	const r = size * 0.34;
-	const rows = [];
-	for (let y = 0; y < size; y++) {
-		const row = Buffer.alloc(1 + size * 4); // 先頭にフィルタバイト
-		for (let x = 0; x < size; x++) {
-			const inside = (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
-			const [rr, gg, bb] = inside ? fg : bg;
-			const o = 1 + x * 4;
-			row[o] = rr;
-			row[o + 1] = gg;
-			row[o + 2] = bb;
-			row[o + 3] = 255;
-		}
-		rows.push(row);
-	}
-	const raw = Buffer.concat(rows);
-	const ihdr = Buffer.alloc(13);
-	ihdr.writeUInt32BE(size, 0);
-	ihdr.writeUInt32BE(size, 4);
-	ihdr[8] = 8; // bit depth
-	ihdr[9] = 6; // color type RGBA
-	const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-	return Buffer.concat([
-		sig,
-		chunk('IHDR', ihdr),
-		chunk('IDAT', deflateSync(raw)),
-		chunk('IEND', Buffer.alloc(0))
-	]);
+// 透過なし扱いの背景（sharp の color オブジェクト）
+const bgColor = { r: 0xff, g: 0xff, b: 0xff, alpha: 1 };
+const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+
+// ---- 元画像の決定 ----
+const argSrc = process.argv[2];
+const candidates = argSrc
+	? [argSrc]
+	: ['png', 'svg', 'jpg', 'jpeg', 'webp'].map((ext) => join(root, `icon-source.${ext}`));
+const found = candidates.find((p) => existsSync(p));
+
+const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <rect width="512" height="512" fill="${BG}"/>
+  <circle cx="256" cy="256" r="174" fill="${FG}"/>
+</svg>`;
+
+const source = found ?? Buffer.from(placeholderSvg);
+if (found) {
+	console.log(`元画像: ${found}`);
+} else {
+	console.log('元画像が見つからないためプレースホルダを使用します。');
+	console.log('  → 任意の画像から作るには: node scripts/make-icons.mjs <画像パス>');
+	console.log('  → または icon-source.png をプロジェクト直下に置いてください。');
 }
 
-const bg = [255, 255, 255];
-const fg = [31, 41, 51]; // theme #1f2933
+// ---- 生成ヘルパ ----
+// 標準アイコン: 正方形に cover（中央を埋める。透過は保持）
+async function square(size, outPath) {
+	await sharp(source).resize(size, size, { fit: 'cover' }).png().toFile(outPath);
+}
 
-writeFileSync(join(iconsDir, 'icon-192.png'), makePng(192, bg, fg));
-writeFileSync(join(iconsDir, 'icon-512.png'), makePng(512, bg, fg));
-writeFileSync(join(iconsDir, 'icon-512-maskable.png'), makePng(512, fg, bg));
-writeFileSync(join(staticDir, 'favicon.png'), makePng(64, bg, fg));
+// maskable: 絵柄を中央 MASKABLE_SAFE 倍に縮小して背景色の正方形へ合成（端の切り抜き対策）
+async function maskable(size, outPath) {
+	const inner = Math.round(size * MASKABLE_SAFE);
+	const fg = await sharp(source)
+		.resize(inner, inner, { fit: 'contain', background: transparent })
+		.png()
+		.toBuffer();
+	await sharp({ create: { width: size, height: size, channels: 4, background: bgColor } })
+		.composite([{ input: fg, gravity: 'center' }])
+		.png()
+		.toFile(outPath);
+}
 
-console.log('icons generated');
+// 背景を埋めた正方形（iOS は透過を嫌うため）
+async function flat(size, outPath) {
+	await sharp(source).resize(size, size, { fit: 'cover' }).flatten({ background: BG }).png().toFile(outPath);
+}
+
+// ---- 出力 ----
+await square(192, join(iconsDir, 'icon-192.png'));
+await square(512, join(iconsDir, 'icon-512.png'));
+await maskable(512, join(iconsDir, 'icon-512-maskable.png'));
+await flat(180, join(iconsDir, 'apple-touch-icon-180.png'));
+await square(64, join(staticDir, 'favicon.png'));
+
+console.log('アイコンを生成しました。');

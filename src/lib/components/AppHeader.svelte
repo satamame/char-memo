@@ -8,15 +8,20 @@
 		title?: string;
 		/** タイトル文字列の左に表示する絵文字アイコン（title 文字列モード時のみ） */
 		icon?: string;
+		/** ヘッダ最左端に置く要素（アプリロゴなど）。戻るボタンより前に表示。 */
+		leading?: Snippet;
 		titleContent?: Snippet;
 		backHref?: string;
 		onback?: () => void;
 		actions?: Snippet;
 	}
-	let { title = '', icon, titleContent, backHref, onback, actions }: Props = $props();
+	let { title = '', icon, leading, titleContent, backHref, onback, actions }: Props = $props();
 </script>
 
 <header class="app-header">
+	{#if leading}
+		{@render leading()}
+	{/if}
 	{#if onback}
 		<button type="button" class="icon-btn back" aria-label="戻る" onclick={onback}>←</button>
 	{:else if backHref}

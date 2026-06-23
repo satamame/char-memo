@@ -49,6 +49,9 @@
 </script>
 
 <AppHeader title="登場人物メモ">
+	{#snippet leading()}
+		<img class="app-logo" src="/icons/icon-192.png" alt="" width="32" height="32" />
+	{/snippet}
 	{#snippet actions()}
 		<button type="button" class="icon-btn" title="インポート" onclick={() => (showImport = true)}>
 			📥
@@ -107,6 +110,13 @@
 {/if}
 
 <style>
+	.app-logo {
+		flex: 0 0 auto;
+		width: 32px;
+		height: 32px;
+		border-radius: 7px;
+		display: block;
+	}
 	.list {
 		list-style: none;
 		margin: 0;

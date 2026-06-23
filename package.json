@@ -8,13 +8,15 @@
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "icons": "node scripts/make-icons.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.67.0",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@vite-pwa/sveltekit": "^1.1.0",
+    "sharp": "^0.35.2",
     "svelte": "^5.56.3",
     "svelte-check": "^4.6.0",
     "typescript": "^6.0.3",
