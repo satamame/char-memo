@@ -102,14 +102,15 @@
 		margin: 0 0 0.35rem;
 		font-weight: 600;
 	}
+	/* 読み取り専用の表示。編集画面の入力欄（白背景＋枠）と区別するため、
+	   ボックスにせず、左アクセント線のみの「引用」風にする。 */
 	.multiline {
 		margin: 0;
 		white-space: pre-wrap;
 		word-break: break-word;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		padding: 0.75rem 0.9rem;
+		padding: 0.1rem 0 0.1rem 0.75rem;
+		border-left: 3px solid var(--border);
+		color: var(--text);
 	}
 	.danger-zone {
 		margin-top: 2rem;
