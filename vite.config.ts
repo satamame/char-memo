@@ -2,6 +2,11 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { defineConfig } from 'vite';
 
+// svelte.config.js と同じベースパス（サブディレクトリ配置対応）。詳細は docs/deploy.md。
+// PWA の scope / start_url をこの配下にする必要がある。
+const base = (process.env.BASE_PATH ?? '/apps/char-memo').replace(/\/+$/, '');
+const scope = `${base}/`;
+
 export default defineConfig({
 	plugins: [
 		sveltekit(),
@@ -16,7 +21,8 @@ export default defineConfig({
 				theme_color: '#1f2933',
 				background_color: '#ffffff',
 				display: 'standalone',
-				start_url: '/',
+				scope,
+				start_url: scope,
 				icons: [
 					{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
 					{ src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },

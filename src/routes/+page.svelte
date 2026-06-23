@@ -1,6 +1,7 @@
 <script lang="ts">
 	// 作品一覧（トップ画面）
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { dndzone, type DndEvent } from 'svelte-dnd-action';
 	import { listBooks, createBook, deleteBook, reorderBooks } from '$lib/db/books';
 	import type { Book } from '$lib/db/schema';
@@ -46,7 +47,7 @@
 
 <AppHeader title="登場人物メモ">
 	{#snippet leading()}
-		<img class="app-logo" src="/icons/icon-192.png" alt="" width="32" height="32" />
+		<img class="app-logo" src="{base}/icons/icon-192.png" alt="" width="32" height="32" />
 	{/snippet}
 	{#snippet actions()}
 		<button type="button" class="icon-btn" title="インポート" onclick={() => (showImport = true)}>
@@ -88,7 +89,7 @@
 		onsubmit={async (titleText) => {
 			const book = await createBook(titleText);
 			showCreate = false;
-			goto(`/book/${book.id}`);
+			goto(`${base}/book/${book.id}`);
 		}}
 	/>
 {/if}
@@ -98,7 +99,7 @@
 		onclose={() => (showImport = false)}
 		oncompleted={(bookId) => {
 			showImport = false;
-			goto(`/book/${bookId}`);
+			goto(`${base}/book/${bookId}`);
 		}}
 	/>
 {/if}

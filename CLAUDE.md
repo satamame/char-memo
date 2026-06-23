@@ -19,6 +19,11 @@
 - `npm run build` … 本番ビルド（`build/` を静的ホスティングへ配置）
 - `npm run icons` … アイコン再生成（`icon-source.png` から）
 
+## デプロイ / 配置パス
+
+- サブディレクトリ配置（base path）と変更手順は [docs/deploy.md](docs/deploy.md) を参照。
+- 既定 base は `/apps/char-memo`。`BASE_PATH` 環境変数で変更可。
+
 ## 変更時の確認
 
 - コミット前に `npm run check` と `npm run build` が通ることを確認する。

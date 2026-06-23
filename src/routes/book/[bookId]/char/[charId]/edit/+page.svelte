@@ -3,6 +3,7 @@
 	// 保存/戻る時:  新規追加(?new=1)なら人物一覧へ、変更なら詳細画面へ戻る。
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { getChar, updateChar, deleteChar } from '$lib/db/chars';
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import ImagePicker from '$lib/components/ImagePicker.svelte';
@@ -72,8 +73,8 @@
 		return s.replace(/[\r\n]+/g, ' ');
 	}
 
-	const detailHref = $derived(`/book/${bookId}/char/${charId}`);
-	const listHref = $derived(`/book/${bookId}`);
+	const detailHref = $derived(`${base}/book/${bookId}/char/${charId}`);
+	const listHref = $derived(`${base}/book/${bookId}`);
 
 	async function save() {
 		await updateChar(charId, {

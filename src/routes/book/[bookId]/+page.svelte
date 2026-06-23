@@ -2,6 +2,7 @@
 	// 人物一覧（作品を選択した画面）。ヘッダ＝作品タイトル（✏️で改名）。ドラッグで並べ替え。
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { dndzone, type DndEvent } from 'svelte-dnd-action';
 	import { getBook, updateBook } from '$lib/db/books';
 	import { listChars, createChar, reorderChars } from '$lib/db/chars';
@@ -32,7 +33,7 @@
 	async function addChar() {
 		// 新規人物を作成し、編集画面（新規モード）へ。保存/戻るで人物一覧に戻る。
 		const c = await createChar(bookId);
-		goto(`/book/${bookId}/char/${c.id}/edit?new=1`);
+		goto(`${base}/book/${bookId}/char/${c.id}/edit?new=1`);
 	}
 
 	function handleConsider(e: CustomEvent<DndEvent<Char>>) {
@@ -51,7 +52,7 @@
 	}
 </script>
 
-<AppHeader title={book?.title ?? ''} icon="📔" backHref="/">
+<AppHeader title={book?.title ?? ''} icon="📔" backHref={`${base}/`}>
 	{#snippet actions()}
 		<button
 			type="button"

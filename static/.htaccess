@@ -1,0 +1,18 @@
+# SPA フォールバック（XServer など Apache 向け）
+# /apps/char-memo/ 配下で、実ファイル/ディレクトリが無いパスは index.html に渡す。
+# （ディープリンクの直接アクセス・リロードで 404 にならないようにする）
+#
+# 配置先のサブディレクトリに合わせて RewriteBase を変更すること。
+# ルート直下に置く場合は RewriteBase / にする。
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /apps/char-memo/
+
+  # 既存のファイル・ディレクトリはそのまま配信
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # それ以外はすべて index.html へ
+  RewriteRule ^ index.html [L]
+</IfModule>

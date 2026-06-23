@@ -2,6 +2,7 @@
 	// 人物の詳細画面（読み取り専用）。ヘッダ＝人物名。📝 で編集画面へ。下部で削除できる。
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { getChar, deleteChar } from '$lib/db/chars';
 	import type { Char } from '$lib/db/schema';
 	import AppHeader from '$lib/components/AppHeader.svelte';
@@ -26,17 +27,17 @@
 		if (!char) return;
 		if (!confirm(`「${char.name || '(名前未設定)'}」を削除します。よろしいですか？`)) return;
 		await deleteChar(charId);
-		goto(`/book/${bookId}`);
+		goto(`${base}/book/${bookId}`);
 	}
 </script>
 
-<AppHeader title={char?.name || '(名前未設定)'} backHref={`/book/${bookId}`}>
+<AppHeader title={char?.name || '(名前未設定)'} backHref={`${base}/book/${bookId}`}>
 	{#snippet actions()}
 		<button
 			type="button"
 			class="icon-btn"
 			title="編集"
-			onclick={() => goto(`/book/${bookId}/char/${charId}/edit`)}
+			onclick={() => goto(`${base}/book/${bookId}/char/${charId}/edit`)}
 		>
 			📝
 		</button>

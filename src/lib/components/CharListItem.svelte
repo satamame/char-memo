@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import Avatar from './Avatar.svelte';
 	import type { Char } from '$lib/db/schema';
 
@@ -8,7 +9,7 @@
 	let { char }: Props = $props();
 </script>
 
-<a class="item" href="/book/{char.bookId}/char/{char.id}">
+<a class="item" href="{base}/book/{char.bookId}/char/{char.id}">
 	<Avatar image={char.image} name={char.name} size={48} />
 	<div class="text">
 		<div class="name">{char.name || '(名前未設定)'}</div>

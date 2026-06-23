@@ -50,6 +50,11 @@ npm run preview  # ビルド結果のプレビュー
 npm run check    # 型チェック (svelte-check)
 ```
 
+## デプロイ / 配置パス
+
+サブディレクトリ配置（base path）と、その変更手順は **[docs/deploy.md](docs/deploy.md)** を参照。
+既定の base は `/apps/char-memo`。ルート直下なら `BASE_PATH=/ npm run build`。
+
 ## アイコンについて
 
 `static/icons/` のアイコンは `scripts/make-icons.mjs` が生成したプレースホルダです。

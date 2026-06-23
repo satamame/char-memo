@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import type { Book } from '$lib/db/schema';
 
 	interface Props {
@@ -11,7 +12,7 @@
 
 <div class="card">
 	<span class="book-icon" aria-hidden="true">📔</span>
-	<a class="title" href="/book/{book.id}">{book.title || '(無題の作品)'}</a>
+	<a class="title" href="{base}/book/{book.id}">{book.title || '(無題の作品)'}</a>
 	<div class="tools">
 		<button type="button" class="icon-btn ghost" title="エクスポート" onclick={() => onexport(book)}>
 			⬇
