@@ -20,6 +20,15 @@ export default defineConfig({
 		SvelteKitPWA({
 			// 更新は自動適用せず、UI で通知してユーザー操作で適用する（編集中のデータ保護のため）
 			registerType: 'prompt',
+			// SPA（adapter-static の fallback: index.html / prerender=false）向けのオフライン対応。
+			// フォールバック HTML は adapter がプラグインより後に生成するため glob では拾えない。
+			// spa オプションが _app/version.json のハッシュ付きで precache へ追加し、
+			// navigateFallback も adapterFallback（= index.html）= SW スコープ（base 配下）相対に
+			// なるので、サブディレクトリ配置でもオフライン初回ロードが効く。詳細は docs/deploy.md。
+			kit: {
+				adapterFallback: 'index.html',
+				spa: true
+			},
 			manifest: {
 				name: 'char-memo — 登場人物メモ',
 				short_name: 'char-memo',
@@ -42,7 +51,8 @@ export default defineConfig({
 				]
 			},
 			workbox: {
-				// アプリシェルをプリキャッシュしてオフライン動作させる
+				// 静的アセット（JS/CSS/アイコン/manifest 等）をプリキャッシュ。
+				// 土台 HTML（index.html）は上の kit.spa 経由で別途 precache される。
 				globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}']
 			},
 			devOptions: {

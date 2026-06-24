@@ -5,7 +5,7 @@ GitHub に push 後、議論・PR連携・共有が要る項目は Issues に昇
 
 ## Now（着手中）
 
-- なし（次の着手候補は Next から）
+（なし）
 
 ## Next（近いうちに）
 
@@ -15,11 +15,6 @@ GitHub に push 後、議論・PR連携・共有が要る項目は Issues に昇
 
 ## Someday / Ideas（やるかも）
 
-- [ ] **オフライン初回ロード対応（Service Worker）**：現状、アプリの土台HTMLが precache されず、navigateFallback も base 非対応（`/`）のため、オフラインでは初回ロードできない。オンライン時は常にネットから最新を取得するので実害は小さい（「更新」を押す前から最新版が見える程度）。
-  - 調査メモ：
-    - ルート(`/`)を prerender すると土台HTMLは precache されるが、URLが `/`（オリジン直下）で base 配下（`/apps/char-memo/`）を指さない。
-    - workbox の `manifestTransforms` を自前で与えると、@vite-pwa/sveltekit がURLを配信構造へ変換する内部処理を上書きしてしまい、precache URL が `client/...` や `prerendered/pages/...` のまま壊れる。
-    - 正しく直すには「プラグインの変換を潰さず、土台HTMLのURLだけ base 配下へ」「navigateFallback を base 配下へ」する必要がある。**ローカルでビルド→`build/sw.js` 検査の反復**が前提。
 - [ ] **ネタバレ②**：人物/自由メモに「ネタバレ印」→ 詳細画面でぼかし＋タップ表示（エクスポートは含む/除外を選択）
 - [ ] **ネタバレ③**：読書位置のしきい値（「◯章から」）で、その先を自動的に隠す
 - [ ] **Android Web Share Target**：共有メニューから json/URL を取り込み（iOS非対応）
@@ -30,6 +25,7 @@ GitHub に push 後、議論・PR連携・共有が要る項目は Issues に昇
 
 ## Done（最近）
 
+- [x] **オフライン初回ロード対応（Service Worker）**：@vite-pwa/sveltekit の SPA レシピ（`kit.spa: true` + `kit.adapterFallback: 'index.html'`）で土台HTMLを precache に追加。`navigateFallback` も `index.html`（= SW スコープ相対 ＝ base 配下）になり、サブディレクトリ配置でもオフライン初回ロードが効く。検証は `build/sw.js` を検査（precache に `index.html` と `createHandlerBoundToURL("index.html")` が一致）。実機での最終確認は「実機（スマホ）でPWA確認」に含める。
 - [x] プロジェクト雛形（SvelteKit + adapter-static + TypeScript + PWA）
 - [x] book/char データモデル・IndexedDB・作品単位の import/export
 - [x] 作品/人物のドラッグ並べ替え

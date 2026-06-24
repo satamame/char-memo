@@ -18,7 +18,7 @@ char-memo は静的サイト（SPA）として `build/` を出力し、静的ホ
 | ファイル | 役割 | 自動追従 |
 | --- | --- | --- |
 | `svelte.config.js` | `kit.paths.base`（リンク・アセットの接頭辞） | `BASE_PATH` で可 |
-| `vite.config.ts` | PWA の `scope` / `start_url` | `BASE_PATH` で可 |
+| `vite.config.ts` | PWA の `scope` / `start_url`、SW のオフライン precache / navigateFallback | `BASE_PATH` で可 |
 | `static/.htaccess` | Apache の SPA フォールバック（`RewriteBase`） | **手動**（テンプレートではない） |
 
 > アプリ内の内部リンクは `$app/paths` の `base` を付けて生成しているため、
